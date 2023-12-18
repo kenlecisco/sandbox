@@ -1,0 +1,56 @@
+version: '3'
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.15.2
+    environment:
+      - discovery.type=single-node
+    ports:
+      - "9200:9200"
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.15.2
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+
+  logstash:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./logstash-config:/usr/share/logstash/pipeline
+    depends_on:
+      - fluentbit
+    ports:
+      - "5044:5044"
+
+  fluentbit:
+    image: fluent/fluent-bit:latest
+    container_name: fluentbit
+    restart: always
+    volumes:
+      - ./fluentd-config/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf
+      - ./fluentd-config/parser.conf:/fluent-bit/etc/parser.conf
+    ports:
+      - "24224:24224"
+    depends_on:
+      - elasticsearch
+
+  nginx:
+     image: nginx:alpine
+     container_name: nginx
+     restart: always
+     ports:
+       - "8080:80"
+     logging:
+       driver: fluentd
+       options:
+         fluentd-address: localhost:24224
+         tag: nginx.access
+     depends_on:
+       - fluentbit
+
+volumes:
+  elasticsearch-data:
+    driver: local
