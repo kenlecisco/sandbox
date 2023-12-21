@@ -15,9 +15,7 @@ services:
       - elasticsearch
 
   logstash:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: docker.elastic.co/logstash/logstash:7.15.2
     volumes:
       - ./logstash-config:/usr/share/logstash/pipeline
     depends_on:
@@ -47,7 +45,7 @@ services:
        driver: fluentd
        options:
          fluentd-address: localhost:24224
-         tag: nginx.access
+         tag: nginx.accessaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
      depends_on:
        - fluentbit
 
